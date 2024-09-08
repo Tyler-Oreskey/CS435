@@ -9,21 +9,27 @@ public class Book {
 
 	public Book(String rawText, int ngramCount) {
 		this.ngramCount = ngramCount;
-		// #TODO#: Split rawText into headerText and bodyText
-		// Hint: Look for a specific pattern that separates metadata from book content
+
 		String[] parts = rawText.split("\\*\\*\\*START OF THIS PROJECT GUTENBERG EBOOK.*\\*\\*\\*", 2);
+		
 		this.headerText = parts[0].trim();
 		this.bodyText = parts[1].trim();
-
-		// #TODO#: Call appropriate methods to initialize other class variables
 		this.author = parseAuthor(headerText);
 		this.year = parseYear(headerText);
 	}
 
 	private String parseAuthor(String headerText) {
-		// #TODO#: Extract author's last name from headerText
-		// Hint: Look for a specific pattern that indicates the author's name
-		// (check parseYear() for guidelines)
+		// Author:\s: Matches "Author:" followed by any whitespace
+		// .* Matches any character (except newline) zero or more times.
+		// \b(\w+)\b: Matches the last word in the line.
+
+		Pattern authorPattern = Pattern.compile("Author:\\s.*\\b(\\w+)\\b");
+		Matcher authorMatcher = authorPattern.matcher(headerText);
+
+		if (authorMatcher.find()) {
+			return authorMatcher.group(1);
+		}
+
 		return "Unknown";
 	}
 
