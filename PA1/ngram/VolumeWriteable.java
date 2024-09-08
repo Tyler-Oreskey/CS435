@@ -7,17 +7,18 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.Writable;
 
-//output value class
 public class VolumeWriteable implements Writable {
 	private IntWritable count;
 	private MapWritable volumeIds;
 
 	public VolumeWriteable(MapWritable volumeIds, IntWritable count) {
-		// #TODO#: Initialize class variables using the constructor parameters
+		this.volumeIds = volumeIds;
+		this.count = count;
 	}
 
 	public VolumeWriteable() {
-		// #TODO#: Initialize class variables with appropriate default values
+		this.volumeIds = new MapWritable();
+		this.count = new IntWritable(0);
 	}
 
 	public IntWritable getCount() {
@@ -29,11 +30,12 @@ public class VolumeWriteable implements Writable {
 	}
 
 	public void set(MapWritable volumeIds, IntWritable count) {
-		// #TODO#: Update class variables with the provided values
+		this.volumeIds = volumeIds;
+		this.count = count;
 	}
 
 	public void insertMapValue(IntWritable key, IntWritable value) {
-		// #TODO#: Add the key-value pair to the volumeIds MapWritable
+		this.volumeIds.put(key, value);
 	}
 
 	@Override

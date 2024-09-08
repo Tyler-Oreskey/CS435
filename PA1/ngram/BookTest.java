@@ -24,6 +24,17 @@ public class BookTest {
     }
 
     @Test
+    public void testParseAuthorSingleName() {
+        String rawText = "Title: Example Book\n" +
+                        "Author: John\n" +
+                        "Release Date: January 1, 2000\n" +
+                        "***START OF THIS PROJECT GUTENBERG EBOOK EXAMPLE BOOK***\n" +
+                        "This is the body of the book. It contains text and more text.";
+        book = new Book(rawText, 2);
+        assertEquals("John", book.getBookAuthor(), "Author should be 'John'");
+    }
+
+    @Test
     public void testParseAuthorMiddleName() {
         String rawText = "Title: Example Book\n" +
                         "Author: Edwin A. Abbot\n" +
@@ -143,7 +154,6 @@ public class BookTest {
         book = new Book(rawText, 2);  // ngramCount = 2 for bigram
         String formattedText = book.getBookBody();
 
-        // The bigram output with _START_ and _END_ tokens at sentence boundaries
         String expected = "_START_ this is a test _END_";
         assertEquals(expected, formattedText, "Bigram text should be formatted correctly with _START_/_END_ tokens");
     }
@@ -159,7 +169,6 @@ public class BookTest {
         book = new Book(rawText, 2);  // ngramCount = 2 for bigram
         String formattedText = book.getBookBody();
 
-        // The bigram output with _START_ and _END_ tokens at sentence boundaries
         String expected = "_START_ this is a test _END_ _START_ why is this a test _END_";
         assertEquals(expected, formattedText, "Bigram text should be formatted correctly with _START_/_END_ tokens");
     }
@@ -175,7 +184,6 @@ public class BookTest {
         book = new Book(rawText, 2);  // ngramCount = 2 for bigram
         String formattedText = book.getBookBody();
 
-        // The bigram output with _START_ and _END_ tokens at sentence boundaries
         String expected = "_START_ this is a test _END_ _START_ youre a test _END_";
         assertEquals(expected, formattedText, "Bigram text should be formatted correctly with _START_/_END_ tokens");
     }
@@ -191,7 +199,6 @@ public class BookTest {
         book = new Book(rawText, 2);  // ngramCount = 2 for bigram
         String formattedText = book.getBookBody();
 
-        // The bigram output with _START_ and _END_ tokens at sentence boundaries
         String expected = "_START_ this is a test _END_ _START_ youre-a test _END_";
         assertEquals(expected, formattedText, "Bigram text should be formatted correctly with _START_/_END_ tokens");
     }
