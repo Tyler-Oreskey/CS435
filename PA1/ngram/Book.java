@@ -11,7 +11,7 @@ public class Book {
 		this.ngramCount = ngramCount;
 
 		String[] parts = rawText.split("\\*\\*\\*START OF THIS PROJECT GUTENBERG EBOOK.*\\*\\*\\*", 2);
-		
+
 		this.headerText = parts[0].trim();
 		this.bodyText = parts[1].trim();
 		this.author = parseAuthor(headerText);
@@ -22,7 +22,6 @@ public class Book {
 		// Author:\s: Matches "Author:" followed by any whitespace
 		// .* Matches any character (except newline) zero or more times.
 		// \b(\w+)\b: Matches the last word in the line.
-
 		Pattern authorPattern = Pattern.compile("Author:\\s.*\\b(\\w+)\\b");
 		Matcher authorMatcher = authorPattern.matcher(headerText);
 
@@ -34,13 +33,13 @@ public class Book {
 	}
 
 	private String parseYear(String headerText) {
-		// #TODO#: Extract release year from headerText
-		// Hint: Look for "Release Date" and then extract the year
-		Pattern yearPattern = Pattern.compile("YOUR_PATTERN_HERE");
+		Pattern yearPattern = Pattern.compile("Release Date:\\s.*\\b(\\w+)\\b");
 		Matcher yearMatcher = yearPattern.matcher(headerText);
+
 		if (yearMatcher.find()) {
-			// #TODO#: Extract and return the year
+			return yearMatcher.group(1);
 		}
+
 		return "Unknown";
 	}
 

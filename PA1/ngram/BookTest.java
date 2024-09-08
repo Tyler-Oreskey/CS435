@@ -31,8 +31,11 @@ public class BookTest {
                         "***START OF THIS PROJECT GUTENBERG EBOOK EXAMPLE BOOK***\n" +
                         "This is the body of the book. It contains text and more text.";
         book = new Book(rawText, 2);
-
-
         assertEquals("Abbot", book.getBookAuthor(), "Author should be 'Abbot'");
+    }
+
+    @Test
+    public void testParseYear() {
+        assertEquals("2000", book.getBookYear(), "Year should be '2000'");
     }
 }
