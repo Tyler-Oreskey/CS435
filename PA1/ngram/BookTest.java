@@ -186,7 +186,7 @@ public class BookTest {
                         "Author: John Doe\n" +
                         "Release Date: January 1, 2000\n" +
                         "***START OF THIS PROJECT GUTENBERG EBOOK EXAMPLE BOOK***\n" +
-                        "-This is a - test. You're-a test.-";
+                        "-This is a - test! You're-a test.-";
         
         book = new Book(rawText, 2);  // ngramCount = 2 for bigram
         String formattedText = book.getBookBody();
