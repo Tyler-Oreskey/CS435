@@ -63,11 +63,31 @@ public class Book {
 		bookText = bookText.toLowerCase();
 
 		if (ngramCount < 2) {
+			return removePunctuation(bookText);
+		} else {
+			String[] sentences = bookText.split("[.!?]");
+			StringBuilder result = new StringBuilder();
+
+			for (String sentence : sentences) {
+				String formattedSentence = removePunctuation(sentence);
+
+				if (!formattedSentence.isEmpty()) {
+					result.append("_START_ ")
+						  .append(formattedSentence)
+						  .append(" _END_ ");
+				}
+			}
+
+			return result.toString().trim();
+		}
+	}
+
+	private String removePunctuation(String text) {
 			// Remove all punctuation except hyphens
 			// \\p{Punct}: This matches any punctuation character.
 			// &&[^-]: intersection that combines the punctuation class with a class that excludes hyphens resulting punctuation characters that do not include hyphens
 			// +: matches one or more punctuation characters (excluding hyphens).
-			String punctuationRemovedText = bookText.replaceAll("[\\p{Punct}&&[^-]]+", "");
+			String punctuationRemovedText = text.replaceAll("[\\p{Punct}&&[^-]]+", "");
 
 			// Remove all stand alone hyphens
 			// (?<!\\w): Ensures that the hyphen (-) is not preceded by a word character (\\w).
@@ -79,11 +99,5 @@ public class Book {
 			// \\s{2,} matches two or more of the preceding whitespace characters
 			String result = hyphensAdjustedText.replaceAll("\\s{2,}", " ").trim();
 			return result;
-		} else {
-			// #TODO#: Format book text for bigram
-			// Hint: Consider sentence boundaries in addition to unigram formatting
-			// String[] sentences = bookText.split("[.!?]");
-		}
-		return "Unknown";
 	}
 }
