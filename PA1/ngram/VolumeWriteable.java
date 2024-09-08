@@ -7,6 +7,7 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.Writable;
 
+//output value class
 public class VolumeWriteable implements Writable {
 	private IntWritable count;
 	private MapWritable volumeIds;

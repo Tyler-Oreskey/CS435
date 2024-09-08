@@ -37,11 +37,12 @@ public class NgramMapReduce extends Configured implements Tool {
 		private final int ngramNum;
 
 		private Profiles(char c, int n) {
-			// #TODO#: Initialize the Profiles enum constructor
+			this.profileChar = c;
+			this.ngramNum = n;
 		}
 
 		public boolean equals(Profiles p) {
-			// #TODO#: Implement the equals method for Profiles
+			return this.profileChar == p.profileChar && this.ngramNum == p.ngramNum;
 		}
 	}
 
@@ -87,21 +88,18 @@ public class NgramMapReduce extends Configured implements Tool {
 
 	public static int runJob(Configuration conf, String inputDir, String outputDir) throws Exception {
 		// function to run job
-
 		Job job = Job.getInstance(conf, "ngram");
 
 		// specify classes for Map Reduce tasks
-		// #TODO#: Replace SPECIFYCLASS.class placeholders with appropriate class names
+		job.setInputFormatClass(WholeFileInputFormat.class);
+		job.setJarByClass(NgramMapReduce.class);
 
-		job.setInputFormatClass(SPECIFYCLASS.class);
-		job.setJarByClass(SPECIFYCLASS.class);
+		job.setMapperClass(TokenizerMapper.class);
+		// job.setCombinerClass(SPECIFYCLASS.class);
+		job.setReducerClass(IntSumReducer.class);
 
-		job.setMapperClass(SPECIFYCLASS.class);
-		job.setCombinerClass(SPECIFYCLASS.class);
-		job.setReducerClass(SPECIFYCLASS.class);
-
-		job.setOutputKeyClass(SPECIFYCLASS.class);
-		job.setOutputValueClass(SPECIFYCLASS.class);
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(VolumeWriteable.class);
 
 		FileInputFormat.addInputPath(job, new Path(inputDir));
 		FileOutputFormat.setOutputPath(job, new Path(outputDir));
