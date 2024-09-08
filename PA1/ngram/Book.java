@@ -13,7 +13,7 @@ public class Book {
 		String[] parts = rawText.split("\\*\\*\\*START OF THIS PROJECT GUTENBERG EBOOK.*\\*\\*\\*", 2);
 
 		this.headerText = parts[0].trim();
-		this.bodyText = parts[1].trim();
+		this.bodyText = formatBook(parts[1]);
 		this.author = parseAuthor(headerText);
 		this.year = parseYear(headerText);
 	}
@@ -60,12 +60,29 @@ public class Book {
 	}
 
 	private String formatBook(String bookText) {
+		bookText = bookText.toLowerCase();
+
 		if (ngramCount < 2) {
-			// #TODO#: Format book text for unigram
-			// Hint: Consider case, punctuation, and special characters
+			// Remove all punctuation except hyphens
+			// \\p{Punct}: This matches any punctuation character.
+			// &&[^-]: intersection that combines the punctuation class with a class that excludes hyphens resulting punctuation characters that do not include hyphens
+			// +: matches one or more punctuation characters (excluding hyphens).
+			String punctuationRemovedText = bookText.replaceAll("[\\p{Punct}&&[^-]]+", "");
+
+			// Remove all stand alone hyphens
+			// (?<!\\w): Ensures that the hyphen (-) is not preceded by a word character (\\w).
+			// -(?!\\w): Ensures that the hyphen (-) is not followed by a word character (\\w).
+			// |: The OR operator that allows either of the two patterns on its sides to match
+			String hyphensAdjustedText = punctuationRemovedText.replaceAll("(?<!\\w)-|-(?!\\w)", "");
+
+			// Change all occurrences of two or more whitespaces with a single whitespace.
+			// \\s{2,} matches two or more of the preceding whitespace characters
+			String result = hyphensAdjustedText.replaceAll("\\s{2,}", " ").trim();
+			return result;
 		} else {
 			// #TODO#: Format book text for bigram
 			// Hint: Consider sentence boundaries in addition to unigram formatting
+			// String[] sentences = bookText.split("[.!?]");
 		}
 		return "Unknown";
 	}
