@@ -21,9 +21,7 @@ public class WholeFileInputFormat extends FileInputFormat<NullWritable, BytesWri
 	public RecordReader<NullWritable, BytesWritable> createRecordReader(
 			InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException {
 		WholeFileRecordReader reader = new WholeFileRecordReader();
-		reader.initialize(SOMETHING, SOMETHING); // #TODO#: Replace SOMETHING with the appropriate arguments for the
-													// initialize method
-													// Hint: Check the initialize method in WholeFileRecordReader class
+		reader.initialize(split, context);
 		return reader;
 	}
 }

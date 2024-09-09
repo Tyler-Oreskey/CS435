@@ -21,8 +21,8 @@ public class WholeFileRecordReader extends RecordReader<NullWritable, BytesWrita
 
 	@Override
 	public void initialize(InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException {
-		// #TODO#: Initialize the fileSplit and conf variables using the provided
-		// parameters
+		this.fileSplit = (FileSplit) split;
+		this.conf = context.getConfiguration();
 	}
 
 	@Override
@@ -39,10 +39,10 @@ public class WholeFileRecordReader extends RecordReader<NullWritable, BytesWrita
 			} finally {
 				IOUtils.closeStream(in);
 			}
-			processed = true;
-			return SOMETHING; // #TODO#: Return appropriate boolean value when processing is done
+			processed = true; // Mark file as processed.
+			return true; // Return true since a record was successfully read.
 		}
-		return SOMETHING; // #TODO#: Return appropriate boolean value when no more data to process
+		return false; // No more records to process.
 	}
 
 	@Override
