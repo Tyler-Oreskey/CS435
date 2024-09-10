@@ -48,22 +48,20 @@ public class NgramMapReduce extends Configured implements Tool {
 
 	public static class TokenizerMapper extends Mapper<Object, BytesWritable, Text, VolumeWriteable> {
 
-		// #TODO#: Define and initialize necessary class variables
-		private VolumeWriteable volume = new VolumeWriteable(SOMETHING, SOMETHING); // #TODO#: Initialize volume with
-																					// appropriate arguments
+		private VolumeWriteable volume = new VolumeWriteable(new MapWritable(), new IntWritable(0));
 
 		public void map(Object key, BytesWritable bWriteable, Context context)
 				throws IOException, InterruptedException {
 			Profiles profile = context.getConfiguration().getEnum("profile", Profiles.A1); // get profile
-
-			// #TODO#: Initialize the volume variable with appropriate values
 
 			// code to get a book
 			String rawText = new String(bWriteable.getBytes());
 			Book book = new Book(rawText, profile.ngramNum);
 			StringTokenizer itr = new StringTokenizer(book.getBookBody());
 
-			// #TODO#: Extract necessary information from the book (author, year)
+			// code for book info
+			String bookAuthor = book.getBookAuthor();
+			String bookYear = book.getBookYear();
 
 			// #TODO#: Define any helper variables you need before looping through tokens
 			while (itr.hasMoreTokens()) {
