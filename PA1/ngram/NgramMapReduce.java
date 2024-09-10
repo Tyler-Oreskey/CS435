@@ -59,9 +59,13 @@ public class NgramMapReduce extends Configured implements Tool {
 			Book book = new Book(rawText, profile.ngramNum);
 			StringTokenizer itr = new StringTokenizer(book.getBookBody());
 
-			// code for book info
+			// book info
 			String bookAuthor = book.getBookAuthor();
 			String bookYear = book.getBookYear();
+
+			// initialize volume variables
+			IntWritable volumeId = new IntWritable(CurrentVolume);
+			IntWritable initialCount = new IntWritable(1);
 
 			// #TODO#: Define any helper variables you need before looping through tokens
 			while (itr.hasMoreTokens()) {
@@ -117,14 +121,12 @@ public class NgramMapReduce extends Configured implements Tool {
 
 	@Override
 	public int run(String[] args) throws Exception {
-		// #TODO#: Update the following section
 		Configuration conf = this.getConf();
 		Profiles profiles[] = { Profiles.A1, Profiles.A2, Profiles.B1, Profiles.B2 };
 		for (Profiles p : profiles) {
-			conf.setEnum("profile", SOMETHING); // #TODO#: Set the correct argument in the configuration
+			conf.setEnum("profile", p);
 			System.out.println("For profile: " + p.toString());
-			if (runJob(SOMETHING, args[0], args[1] + p.toString()) != 0) // #TODO#: Call runJob with the correct
-																			// arguments
+			if (runJob(conf, args[0], args[1] + p.toString()) != 0)
 				return 1; // error
 		}
 		return 0; // success
