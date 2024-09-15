@@ -8,6 +8,8 @@ import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.UUID;
+import java.util.Set;
+import java.util.HashSet;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -51,7 +53,7 @@ public class NgramMapReduce extends Configured implements Tool {
 
 	public static class TokenizerMapper extends Mapper<Object, BytesWritable, Text, VolumeWriteable> {
 
-		private VolumeWriteable volume = new VolumeWriteable(new MapWritable(), new IntWritable(0));
+		private VolumeWriteable volume = new VolumeWriteable();
 
 		public void map(Object key, BytesWritable bWriteable, Context context)
 				throws IOException, InterruptedException {
@@ -79,9 +81,15 @@ public class NgramMapReduce extends Configured implements Tool {
 				if (!currentWord.isEmpty()) {
 					switch (profile) {
 						case A1:
+							// For each word, set the occurrence count to 1
+							volume.set(volume.getVolumeIds(), new IntWritable(1));
 							Text unigramYearKey = new Text(currentWord + "\t" + bookYear);
 							context.write(unigramYearKey, volume);
 							break;
+						case B1:
+							volume.set(volume.getVolumeIds(), new IntWritable(1));
+							Text unigramAuthorKey = new Text(currentWord + "\t" + bookAuthor);
+							context.write(unigramAuthorKey, volume);
 						default:
 							break;
 					}
@@ -92,11 +100,30 @@ public class NgramMapReduce extends Configured implements Tool {
 
 	public static class IntSumReducer extends Reducer<Text, VolumeWriteable, Text, VolumeWriteable> {
 		// #TODO#: Initialize any necessary class variables
+		private VolumeWriteable volume = new VolumeWriteable();
 
 		public void reduce(Text key, Iterable<VolumeWriteable> values, Context context)
 				throws IOException, InterruptedException {
 			// #TODO#: Implement the reduce method
 			// hint: Aggregate the counts and volume information
+			int totalOccurences = 0;
+			Set<Text> uniqueBookIDs = new HashSet<>();
+
+			for (VolumeWriteable value : values) {
+				totalOccurences += value.getCount().get();
+
+				for (Writable bookId : value.getVolumeIds().keySet()) {
+					uniqueBookIDs.add((Text) bookId);
+				}
+			}
+
+			MapWritable volumeIds = new MapWritable();
+			for (Text bookId : uniqueBookIDs) {
+				volumeIds.put(bookId, new IntWritable(1));
+			}
+
+			volume.set(volumeIds, new IntWritable(totalOccurences));
+			context.write(key, volume);
 		}
 	}
 
