@@ -10,12 +10,22 @@ public class Book {
 	public Book(String rawText, int ngramCount) {
 		this.ngramCount = ngramCount;
 
-		String[] parts = rawText.split("\\*\\*\\*START OF THIS PROJECT GUTENBERG EBOOK.*\\*\\*\\*", 2);
+		String regex = "\\*\\*\\* START OF THIS PROJECT GUTENBERG EBOOK ([^*]+) \\*\\*\\*";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(rawText);
 
-		this.headerText = parts[0].trim();
-		this.bodyText = formatBook(parts[1]);
-		this.author = parseAuthor(headerText);
-		this.year = parseYear(headerText);
+        if (matcher.find()) {
+            String[] parts = rawText.split(regex, 2);
+            this.headerText = parts[0].trim();
+            this.bodyText = formatBook(parts[1]);
+            this.author = parseAuthor(headerText);
+            this.year = parseYear(headerText);
+        } else {
+            this.headerText = "Unknown";
+            this.bodyText = "Unknown";
+            this.author = "Unknown";
+            this.year = "Unknown";
+        }
 	}
 
 	private String parseAuthor(String headerText) {
@@ -33,7 +43,7 @@ public class Book {
 	}
 
 	private String parseYear(String headerText) {
-		Pattern yearPattern = Pattern.compile("Release Date:\\s.*\\b(\\w+)\\b");
+		Pattern yearPattern = Pattern.compile("Release Date:\\s*.*?(\\b\\d{4}\\b)");
 		Matcher yearMatcher = yearPattern.matcher(headerText);
 
 		if (yearMatcher.find()) {

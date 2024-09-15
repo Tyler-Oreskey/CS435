@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.UUID;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -23,6 +24,8 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.io.Writable;
+import org.apache.log4j.Logger;
 
 public class NgramMapReduce extends Configured implements Tool {
 	private static int CurrentVolume = 1;
@@ -54,6 +57,9 @@ public class NgramMapReduce extends Configured implements Tool {
 				throws IOException, InterruptedException {
 			Profiles profile = context.getConfiguration().getEnum("profile", Profiles.A1); // get profile
 
+			// Generate a UUID to uniquely identify the book
+			String bookUUID = UUID.randomUUID().toString();
+
 			// code to get a book
 			String rawText = new String(bWriteable.getBytes());
 			Book book = new Book(rawText, profile.ngramNum);
@@ -63,19 +69,25 @@ public class NgramMapReduce extends Configured implements Tool {
 			String bookAuthor = book.getBookAuthor();
 			String bookYear = book.getBookYear();
 
-			// initialize volume variables
-			IntWritable volumeId = new IntWritable(CurrentVolume);
-			IntWritable initialCount = new IntWritable(1);
+			// Insert the book UUID and count into volume
+			volume.insertMapValue(new Text(bookUUID), new IntWritable(1));
 
 			// #TODO#: Define any helper variables you need before looping through tokens
 			while (itr.hasMoreTokens()) {
-				// #TODO#: Implement the mapping logic for different profiles (A1, B1, A2, B2)
-				// hint: Use different logic for unigrams (A1, B1) and bigrams (A2, B2)
-				// hint: Consider how to handle the output format for each profile
-			}
-			// #TODO#: Update the CurrentVolume
-		}
+				String currentWord = itr.nextToken().trim();
 
+				if (!currentWord.isEmpty()) {
+					switch (profile) {
+						case A1:
+							Text unigramYearKey = new Text(currentWord + "\t" + bookYear);
+							context.write(unigramYearKey, volume);
+							break;
+						default:
+							break;
+					}
+				}
+			}
+		}
 	}
 
 	public static class IntSumReducer extends Reducer<Text, VolumeWriteable, Text, VolumeWriteable> {

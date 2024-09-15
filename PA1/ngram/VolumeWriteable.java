@@ -6,6 +6,7 @@ import java.io.IOException;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.Text;
 
 //output value class
 public class VolumeWriteable implements Writable {
@@ -35,7 +36,7 @@ public class VolumeWriteable implements Writable {
 		this.count = count;
 	}
 
-	public void insertMapValue(IntWritable key, IntWritable value) {
+	public void insertMapValue(Text key, IntWritable value) {
 		this.volumeIds.put(key, value);
 	}
 
