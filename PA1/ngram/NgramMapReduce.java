@@ -30,7 +30,6 @@ import org.apache.hadoop.io.Writable;
 import org.apache.log4j.Logger;
 
 public class NgramMapReduce extends Configured implements Tool {
-	private static int CurrentVolume = 1;
 
 	public static enum Profiles {
 		A1('a', 1),
@@ -52,6 +51,7 @@ public class NgramMapReduce extends Configured implements Tool {
 	}
 
 	public static class TokenizerMapper extends Mapper<Object, BytesWritable, Text, VolumeWriteable> {
+		private static final Logger LOG = Logger.getLogger(TokenizerMapper.class);
 
 		private VolumeWriteable volume = new VolumeWriteable();
 
@@ -74,7 +74,9 @@ public class NgramMapReduce extends Configured implements Tool {
 			// Insert the book UUID and count into volume
 			volume.insertMapValue(new Text(bookUUID), new IntWritable(1));
 
-			// #TODO#: Define any helper variables you need before looping through tokens
+			// keep track of previous word for bigrams
+			String prevWord = "";
+
 			while (itr.hasMoreTokens()) {
 				String currentWord = itr.nextToken().trim();
 
@@ -90,6 +92,28 @@ public class NgramMapReduce extends Configured implements Tool {
 							volume.set(volume.getVolumeIds(), new IntWritable(1));
 							Text unigramAuthorKey = new Text(currentWord + "\t" + bookAuthor);
 							context.write(unigramAuthorKey, volume);
+						case A2:
+							if (!prevWord.equals("_START_") &&
+								!prevWord.equals("_END_") &&
+								!currentWord.equals("_START_") &&
+								!currentWord.equals("_END_")) {
+								volume.set(volume.getVolumeIds(), new IntWritable(1));
+								Text bigramYearKey = new Text(prevWord + " " + currentWord + "\t" + bookYear);
+								context.write(bigramYearKey, volume);
+							}
+							prevWord = currentWord;
+							break;
+						case B2:
+							if (!prevWord.equals("_START_") &&
+								!prevWord.equals("_END_") &&
+								!currentWord.equals("_START_") &&
+								!currentWord.equals("_END_")) {
+								volume.set(volume.getVolumeIds(), new IntWritable(1));
+								Text bigramAuthorKey = new Text(prevWord + " " + currentWord + "\t" + bookAuthor);
+								context.write(bigramAuthorKey, volume);
+							}
+							prevWord = currentWord;
+							break;
 						default:
 							break;
 					}
