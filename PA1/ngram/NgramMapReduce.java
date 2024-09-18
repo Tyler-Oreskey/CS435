@@ -73,6 +73,7 @@ public class NgramMapReduce extends Configured implements Tool {
 
 			// Insert the book UUID and count into volume
 			volume.insertMapValue(new Text(bookUUID), new IntWritable(1));
+			volume.set(volume.getVolumeIds(), new IntWritable(1));
 
 			// keep track of previous word for bigrams
 			String prevWord = "";
@@ -83,34 +84,22 @@ public class NgramMapReduce extends Configured implements Tool {
 				if (!currentWord.isEmpty()) {
 					switch (profile) {
 						case A1:
-							// For each word, set the occurrence count to 1
-							volume.set(volume.getVolumeIds(), new IntWritable(1));
 							Text unigramYearKey = new Text(currentWord + "\t" + bookYear);
 							context.write(unigramYearKey, volume);
 							break;
 						case B1:
-							volume.set(volume.getVolumeIds(), new IntWritable(1));
 							Text unigramAuthorKey = new Text(currentWord + "\t" + bookAuthor);
 							context.write(unigramAuthorKey, volume);
-						case A2:
-							if (!prevWord.equals("_START_") &&
-								!prevWord.equals("_END_") &&
-								!currentWord.equals("_START_") &&
-								!currentWord.equals("_END_")) {
-								volume.set(volume.getVolumeIds(), new IntWritable(1));
-								Text bigramYearKey = new Text(prevWord + " " + currentWord + "\t" + bookYear);
-								context.write(bigramYearKey, volume);
-							}
-							prevWord = currentWord;
 							break;
+						case A2:
 						case B2:
-							if (!prevWord.equals("_START_") &&
-								!prevWord.equals("_END_") &&
-								!currentWord.equals("_START_") &&
-								!currentWord.equals("_END_")) {
-								volume.set(volume.getVolumeIds(), new IntWritable(1));
-								Text bigramAuthorKey = new Text(prevWord + " " + currentWord + "\t" + bookAuthor);
-								context.write(bigramAuthorKey, volume);
+							if (!prevWord.equals("_START_") && !prevWord.equals("_END_")
+								&& !currentWord.equals("_START_") && !currentWord.equals("_END_")) {
+								String bigramKey = prevWord + " " + currentWord;
+								Text bigramKeyText = profile == Profiles.A2
+									? new Text(bigramKey + "\t" + bookYear)
+									: new Text(bigramKey + "\t" + bookAuthor);
+								context.write(bigramKeyText, volume);
 							}
 							prevWord = currentWord;
 							break;
@@ -123,30 +112,22 @@ public class NgramMapReduce extends Configured implements Tool {
 	}
 
 	public static class IntSumReducer extends Reducer<Text, VolumeWriteable, Text, VolumeWriteable> {
-		// #TODO#: Initialize any necessary class variables
 		private VolumeWriteable volume = new VolumeWriteable();
 
 		public void reduce(Text key, Iterable<VolumeWriteable> values, Context context)
 				throws IOException, InterruptedException {
-			// #TODO#: Implement the reduce method
-			// hint: Aggregate the counts and volume information
-			int totalOccurences = 0;
-			Set<Text> uniqueBookIDs = new HashSet<>();
+
+			int volumeCount = 0;
+			MapWritable uniqueBooks = new MapWritable();
 
 			for (VolumeWriteable value : values) {
-				totalOccurences += value.getCount().get();
-
+				volumeCount += value.getCount().get();
 				for (Writable bookId : value.getVolumeIds().keySet()) {
-					uniqueBookIDs.add((Text) bookId);
+					uniqueBooks.put(bookId, new IntWritable(1));
 				}
 			}
 
-			MapWritable volumeIds = new MapWritable();
-			for (Text bookId : uniqueBookIDs) {
-				volumeIds.put(bookId, new IntWritable(1));
-			}
-
-			volume.set(volumeIds, new IntWritable(totalOccurences));
+			volume.set(uniqueBooks, new IntWritable(volumeCount));
 			context.write(key, volume);
 		}
 	}
