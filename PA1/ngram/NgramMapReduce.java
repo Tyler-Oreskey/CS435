@@ -51,9 +51,7 @@ public class NgramMapReduce extends Configured implements Tool {
 	}
 
 	public static class TokenizerMapper extends Mapper<Object, BytesWritable, Text, VolumeWriteable> {
-		private static final Logger LOG = Logger.getLogger(TokenizerMapper.class);
-
-		private VolumeWriteable volume = new VolumeWriteable();
+		private VolumeWriteable volume = new VolumeWriteable(new MapWritable(), new IntWritable(1));
 
 		public void map(Object key, BytesWritable bWriteable, Context context)
 				throws IOException, InterruptedException {
@@ -78,7 +76,6 @@ public class NgramMapReduce extends Configured implements Tool {
 
 			// Insert the book UUID and count into volume
 			volume.insertMapValue(new Text(bookUUID), new IntWritable(1));
-			volume.set(volume.getVolumeIds(), new IntWritable(1));
 
 			// keep track of previous word for bigrams
 			String prevWord = "";
