@@ -10,16 +10,25 @@ public class Book {
 	public Book(String rawText, int ngramCount) {
 		this.ngramCount = ngramCount;
 
-		String regex = "\\*\\*\\* START OF THIS PROJECT GUTENBERG EBOOK ([^*]+) \\*\\*\\*";
+		String regex = "\\*\\*\\* [^*]+ \\*\\*\\*";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(rawText);
 
         if (matcher.find()) {
             String[] parts = rawText.split(regex, 2);
-            this.headerText = parts[0].trim();
-            this.bodyText = formatBook(parts[1]);
-            this.author = parseAuthor(headerText);
-            this.year = parseYear(headerText);
+
+			if (parts[0].isEmpty()|| parts[1].isEmpty()) {
+				this.headerText = "Unknown";
+				this.bodyText = "Unknown";
+				this.author = "Unknown";
+				this.year = "Unknown";
+			}
+			else {
+				this.headerText = parts[0].trim();
+				this.bodyText = formatBook(parts[1]);
+				this.author = parseAuthor(headerText);
+				this.year = parseYear(headerText);
+			}
         } else {
             this.headerText = "Unknown";
             this.bodyText = "Unknown";

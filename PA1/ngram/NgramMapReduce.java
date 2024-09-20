@@ -71,6 +71,11 @@ public class NgramMapReduce extends Configured implements Tool {
 			String bookAuthor = book.getBookAuthor();
 			String bookYear = book.getBookYear();
 
+			// If author or year is unknown, skip this book
+			if (bookAuthor.equals("Unknown") || bookYear.equals("Unknown")) {
+				return;
+			}
+
 			// Insert the book UUID and count into volume
 			volume.insertMapValue(new Text(bookUUID), new IntWritable(1));
 			volume.set(volume.getVolumeIds(), new IntWritable(1));
