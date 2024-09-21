@@ -38,9 +38,6 @@ public class Book {
 	}
 
 	private String parseAuthor(String headerText) {
-		// Author:\s: Matches "Author:" followed by any whitespace
-		// .* Matches any character (except newline) zero or more times.
-		// \b(\w+)\b: Matches the last word in the line.
 		Pattern authorPattern = Pattern.compile("Author:\\s.*\\b(\\w+)\\b");
 		Matcher authorMatcher = authorPattern.matcher(headerText);
 
@@ -103,19 +100,12 @@ public class Book {
 
 	private String removePunctuation(String text) {
 			// Remove all punctuation except hyphens
-			// \\p{Punct}: This matches any punctuation character.
-			// &&[^-]: intersection that combines the punctuation class with a class that excludes hyphens resulting punctuation characters that do not include hyphens
-			// +: matches one or more punctuation characters (excluding hyphens).
 			String punctuationRemovedText = text.replaceAll("[\\p{Punct}&&[^-]]+", "");
 
 			// Remove all stand alone hyphens
-			// (?<!\\w): Ensures that the hyphen (-) is not preceded by a word character (\\w).
-			// -(?!\\w): Ensures that the hyphen (-) is not followed by a word character (\\w).
-			// |: The OR operator that allows either of the two patterns on its sides to match
 			String hyphensAdjustedText = punctuationRemovedText.replaceAll("(?<!\\w)-|-(?!\\w)", "");
 
 			// Change all occurrences of two or more whitespaces with a single whitespace.
-			// \\s{2,} matches two or more of the preceding whitespace characters
 			String result = hyphensAdjustedText.replaceAll("\\s{2,}", " ").trim();
 			return result;
 	}
