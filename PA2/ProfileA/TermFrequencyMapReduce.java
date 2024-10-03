@@ -34,6 +34,8 @@ import org.apache.hadoop.io.Writable;
 public class TermFrequencyMapReduce extends Configured implements Tool {
 
 	public static class TermFrequencyMapper extends Mapper<Object, Text, Text, IntWritable> {
+		private final static IntWritable one = new IntWritable(1);
+		private Text wordWithID = new Text();
 
 		public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
 			String rawText = new String(value.toString());
@@ -51,24 +53,28 @@ public class TermFrequencyMapReduce extends Configured implements Tool {
 				String currentWord = itr.nextToken().trim();
 
 				if (!currentWord.isEmpty()) {
-					context.write(new Text(articleID + " " + currentWord), new IntWritable(1));
+					wordWithID.set(articleID + " " + currentWord);
+					context.write(wordWithID, one);
 				}
 			}
 		}
 	}
 
-	public static class TermFrequencyReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
+	public static class TermFrequencyReducer extends Reducer<Text, IntWritable, Text, Text> {
 		private IntWritable result = new IntWritable();
 
 		public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
 			int sum = 0;
 
-			for (IntWritable val : values) {
-				sum += val.get();
+			for (IntWritable value : values) {
+				sum += value.get();
 			}
 
-			result.set(sum);
-			context.write(key, result);
+			String[] keyParts = key.toString().split(" ");
+			String articleID = keyParts[0];
+			String unigram = keyParts[1];
+
+			context.write(new Text(articleID), new Text("(" + unigram + ", " + sum + ")")); 
 		}
 	}
 
@@ -78,8 +84,13 @@ public class TermFrequencyMapReduce extends Configured implements Tool {
 		job1.setJarByClass(TermFrequencyMapReduce.class);
 		job1.setMapperClass(TermFrequencyMapper.class);
 		job1.setReducerClass(TermFrequencyReducer.class);
+		// set output types for mapper
+		job1.setMapOutputKeyClass(Text.class);
+		job1.setMapOutputValueClass(IntWritable.class);
+		// set output types for reducer
 		job1.setOutputKeyClass(Text.class);
-		job1.setOutputValueClass(IntWritable.class);
+		job1.setOutputValueClass(Text.class);
+		// set file I/O for job 1
 		FileInputFormat.addInputPath(job1, new Path(inputDir));
 		FileOutputFormat.setOutputPath(job1, new Path(outputDir));
 
