@@ -80,10 +80,9 @@ public class TermFrequencyMapReduce extends Configured implements Tool {
 		}
 	}
 
-	public static class IdentityMapper extends Mapper<LongWritable, Text, Text, Text> {
-		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-			System.out.println("Key: " + key.toString() + "   Value: " + value);
-			// context.write(key, value); // Pass the input directly to the reducer
+	public static class IdentityMapper extends Mapper<Text, Text, Text, Text> {
+		public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
+			context.write(key, value);
 		}
 	}
 

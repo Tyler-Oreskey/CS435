@@ -10,7 +10,7 @@ import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 
-public class FrequencyToKeyValueInputFormat extends FileInputFormat<LongWritable, Text> {
+public class FrequencyToKeyValueInputFormat extends FileInputFormat<Text, Text> {
 
 	@Override
 	protected boolean isSplitable(JobContext context, Path file) {
@@ -18,7 +18,7 @@ public class FrequencyToKeyValueInputFormat extends FileInputFormat<LongWritable
 	}
 
     @Override
-	public RecordReader<LongWritable, Text> createRecordReader(
+	public RecordReader<Text, Text> createRecordReader(
 			InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException {
 		FrequencyToKeyValueRecordReader reader = new FrequencyToKeyValueRecordReader();
 		reader.initialize(split, context);

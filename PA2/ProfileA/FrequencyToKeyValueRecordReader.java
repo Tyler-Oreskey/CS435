@@ -9,9 +9,9 @@ import org.apache.hadoop.mapreduce.lib.input.LineRecordReader;
 
 import java.io.IOException;
 
-public class FrequencyToKeyValueRecordReader extends RecordReader<LongWritable, Text> {
+public class FrequencyToKeyValueRecordReader extends RecordReader<Text, Text> {
     private LineRecordReader lineReader = new LineRecordReader();
-    private LongWritable key = new LongWritable();
+    private Text key = new Text();
     private Text value = new Text();
 
     @Override
@@ -31,7 +31,7 @@ public class FrequencyToKeyValueRecordReader extends RecordReader<LongWritable, 
                 String articleIdStr = parts[0].trim();
                 String unigramStr = parts[1].trim(); // This will include (002, 1)
 
-                key.set(Long.parseLong(articleIdStr));
+                key.set(articleIdStr);
                 value.set(unigramStr);
                 return true;
             }
@@ -41,7 +41,7 @@ public class FrequencyToKeyValueRecordReader extends RecordReader<LongWritable, 
     
 
     @Override
-    public LongWritable getCurrentKey() throws IOException, InterruptedException {
+    public Text getCurrentKey() throws IOException, InterruptedException {
         return key;
     }
 
