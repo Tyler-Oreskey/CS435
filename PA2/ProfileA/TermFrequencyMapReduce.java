@@ -13,6 +13,7 @@ import javax.naming.Context;
 import java.util.UUID;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -88,10 +89,43 @@ public class TermFrequencyMapReduce extends Configured implements Tool {
 
 	public static class TFReducer extends Reducer<Text, Text, Text, Text> {
 		public void reduce(Text articleID, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-
+			double maxFrequency = 0;
+			List<String> unigrams = new ArrayList<>(); // To store unigram information
+	
+			// First pass: find the maximum frequency and collect unigram data
+			for (Text value : values) {
+				String valueStr = value.toString();
+				// Remove parentheses and split by comma
+				String[] parts = valueStr.replaceAll("[()]", "").split(", ");
+				if (parts.length == 2) {
+					String unigram = parts[0]; // unigram
+					double tfValue = Double.parseDouble(parts[1]); // TFvalue
+	
+					// Update maxFrequency
+					maxFrequency = Math.max(maxFrequency, tfValue);
+					
+					// Store unigram info for the next pass
+					unigrams.add(unigram + "," + tfValue);
+				}
+			}
+	
+			// Second pass: calculate TF for each unigram using the stored data
+			for (String unigramInfo : unigrams) {
+				String[] parts = unigramInfo.split(",");
+				String unigram = parts[0];
+				double tfValue = Double.parseDouble(parts[1]);
+	
+				// Calculate TF
+				double tf = 0.5 + 0.5 * (tfValue / maxFrequency);
+	
+				// Write output as <docID, (unigram TFvalue)>
+				context.write(articleID, new Text("(" + unigram + ", " + tf + ")"));
+			}
 		}
 	}
+	
 
+	
 	public static int runJob(Configuration conf, String inputDir, String outputDir) throws Exception {
 		// === Job 1: Term Frequency Calculation ===
 		Job job1 = Job.getInstance(conf, "Term Frequency Job");
