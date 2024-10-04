@@ -25,6 +25,8 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.io.LongWritable;
+
 
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -78,23 +80,61 @@ public class TermFrequencyMapReduce extends Configured implements Tool {
 		}
 	}
 
+	public static class IdentityMapper extends Mapper<LongWritable, Text, Text, Text> {
+		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+			System.out.println("Key: " + key.toString() + "   Value: " + value);
+			// context.write(key, value); // Pass the input directly to the reducer
+		}
+	}
+
+	public static class TFReducer extends Reducer<Text, Text, Text, Text> {
+		public void reduce(Text articleID, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+
+		}
+	}
+
 	public static int runJob(Configuration conf, String inputDir, String outputDir) throws Exception {
-		// function to run job1
+		// === Job 1: Term Frequency Calculation ===
 		Job job1 = Job.getInstance(conf, "Term Frequency Job");
 		job1.setJarByClass(TermFrequencyMapReduce.class);
 		job1.setMapperClass(TermFrequencyMapper.class);
 		job1.setReducerClass(TermFrequencyReducer.class);
+
 		// set output types for mapper
 		job1.setMapOutputKeyClass(Text.class);
 		job1.setMapOutputValueClass(IntWritable.class);
+
 		// set output types for reducer
 		job1.setOutputKeyClass(Text.class);
 		job1.setOutputValueClass(Text.class);
-		// set file I/O for job 1
-		FileInputFormat.addInputPath(job1, new Path(inputDir));
-		FileOutputFormat.setOutputPath(job1, new Path(outputDir));
 
-		return job1.waitForCompletion(true) ? 0 : 1;
+		// set file I/O path for job 1
+		FileInputFormat.addInputPath(job1, new Path(inputDir));
+		Path job1OutputPath = new Path("job1_output");
+		FileOutputFormat.setOutputPath(job1, job1OutputPath);
+		job1.waitForCompletion(true);
+
+		// === Job 2: TF Calculation ===
+		Job job2 = Job.getInstance(conf, "Calculate TF Job");
+		job2.setInputFormatClass(FrequencyToKeyValueInputFormat.class);
+
+		job2.setJarByClass(TermFrequencyMapReduce.class);
+		job2.setMapperClass(IdentityMapper.class);
+		job2.setReducerClass(TFReducer.class);
+
+		// set output types for mapper
+		job2.setMapOutputKeyClass(Text.class);
+        job2.setMapOutputValueClass(Text.class);
+
+		// set output types for reducer
+        job2.setOutputKeyClass(Text.class);
+        job2.setOutputValueClass(Text.class);
+
+		// set file I/O path for job 2
+		FileInputFormat.addInputPath(job2, job1OutputPath);
+		FileOutputFormat.setOutputPath(job2, new Path(outputDir));
+
+		return job2.waitForCompletion(true) ? 0 : 1;
 	}
 
 	public static void main(String[] args) throws Exception {
