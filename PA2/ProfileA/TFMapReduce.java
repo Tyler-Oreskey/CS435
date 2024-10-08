@@ -13,13 +13,14 @@ import org.apache.hadoop.mapreduce.Reducer;
 
 public class TFMapReduce {
     public static class TFMapper extends Mapper<Text, Text, Text, Text> {
-		public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
-			context.write(key, value);
+		public void map(Text docID, Text value, Context context) throws IOException, InterruptedException {
+            // output as <docID, (unigram frequency)>
+			context.write(docID, value);
 		}
 	}
 
 	public static class TFReducer extends Reducer<Text, Text, Text, Text> {
-		public void reduce(Text articleID, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+		public void reduce(Text docID, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 			double maxFrequency = 0;
 			List<String> unigrams = new ArrayList<>();
 	
@@ -41,9 +42,9 @@ public class TFMapReduce {
 				String unigram = parts[0];
 				double tfValue = Double.parseDouble(parts[1]);
 	
-				// Calculate TF and write output as <articleID, (unigram TFvalue)>
+				// Calculate TF and write output as <docID, (unigram TFvalue)>
 				double tf = 0.5 + 0.5 * (tfValue / maxFrequency);	
-				context.write(articleID, new Text("(" + unigram + ", " + tf + ")"));
+				context.write(docID, new Text("(" + unigram + ", " + tf + ")"));
 			}
 		}
 	}

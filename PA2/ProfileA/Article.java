@@ -4,26 +4,26 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Article {
-    private String articleID;
+    private String docID;
     private String bodyText;
 	private static final Pattern NON_ALPHANUMERIC_PATTERN = Pattern.compile("[^a-zA-Z0-9\\s]");
 
 	public Article(String rawText) {
         String[] parts = rawText.split("<====>");
         if (parts.length == 3) {
-            this.articleID = parts[1].trim();
+            this.docID = parts[1].trim();
             this.bodyText = removeNonAlphanumeric(parts[2].trim()).toLowerCase();
         } else {
-            this.articleID = "Unknown";
+            this.docID = "Unknown";
             this.bodyText = "";
         }
 	}
 
-	public String getArticleID() {
-        return this.articleID;
+	public String getDocID() {
+        return this.docID;
     }
 
-	public String getArticleBody() {
+	public String getBody() {
 		return bodyText;
 	}
 

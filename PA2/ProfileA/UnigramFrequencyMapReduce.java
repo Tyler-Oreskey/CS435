@@ -19,21 +19,22 @@ public class UnigramFrequencyMapReduce {
 		public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
 			String rawText = value.toString();
 			Article article = new Article(rawText);
-			String articleID = article.getArticleID();
+			String docID = article.getDocID();
 
-			if (articleID.equals("Unknown")) {
+			if (docID.equals("Unknown")) {
 				return;
 			}
 
             // Increment the document count for valid articles
             documentCount++;
 
-			StringTokenizer itr = new StringTokenizer(article.getArticleBody());
+			StringTokenizer itr = new StringTokenizer(article.getBody());
 			while (itr.hasMoreTokens()) {
 				String currentWord = itr.nextToken().trim();
 
 				if (!currentWord.isEmpty()) {
-					context.write(new Text(articleID + " " + currentWord), new IntWritable(1));
+                    // output as <docID unigram 1>
+					context.write(new Text(docID + " " + currentWord), new IntWritable(1));
 				}
 			}
 		}
@@ -53,10 +54,11 @@ public class UnigramFrequencyMapReduce {
 			}
 
 			String[] keyParts = key.toString().split(" ");
-			String articleID = keyParts[0];
+			String docID = keyParts[0];
 			String unigram = keyParts[1];
 
-			context.write(new Text(articleID), new Text("(" + unigram + ", " + sum + ")")); 
+            // output as <docID, (unigram frequency)>
+			context.write(new Text(docID), new Text("(" + unigram + ", " + sum + ")")); 
 		}
 	}
 }
