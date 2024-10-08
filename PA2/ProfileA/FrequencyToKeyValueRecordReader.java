@@ -9,10 +9,10 @@ import org.apache.hadoop.mapreduce.lib.input.LineRecordReader;
 
 import java.io.IOException;
 
-public class FrequencyToKeyValueRecordReader extends RecordReader<Text, Text> {
+public class FrequencyToKeyValueRecordReader extends RecordReader<Text, Tuple> {
     private LineRecordReader lineReader = new LineRecordReader();
     private Text key = new Text();
-    private Text value = new Text();
+    private Tuple value;
 
     @Override
     public void initialize(InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException {
@@ -28,12 +28,17 @@ public class FrequencyToKeyValueRecordReader extends RecordReader<Text, Text> {
             String[] parts = lineStr.split("\\s+", 2);
     
             if (parts.length == 2) {
-                String articleIdStr = parts[0].trim();
-                String unigramStr = parts[1].trim(); // This will include (002, 1)
+                String docID = parts[0].trim();
+                String[] tupleParts = parts[1].replaceAll("[()]", "").split(", "); // Split the (unigram, frequency) part
 
-                key.set(articleIdStr);
-                value.set(unigramStr);
-                return true;
+                if (tupleParts.length == 2) {
+                    String unigram = tupleParts[0].trim();
+                    double frequency = Double.parseDouble(tupleParts[1].trim());
+
+                    key.set(docID);
+                    value = new Tuple(unigram, frequency);
+                    return true;
+                }
             }
         }
         return false; // No more records to process
@@ -46,7 +51,7 @@ public class FrequencyToKeyValueRecordReader extends RecordReader<Text, Text> {
     }
 
     @Override
-    public Text getCurrentValue() throws IOException, InterruptedException {
+    public Tuple getCurrentValue() throws IOException, InterruptedException {
         return value;
     }
 

@@ -32,11 +32,13 @@ public class ProfileA extends Configured implements Tool {
 		job1.setMapOutputKeyClass(Text.class);
 		job1.setMapOutputValueClass(IntWritable.class);
 		job1.setOutputKeyClass(Text.class);
-		job1.setOutputValueClass(Text.class);
+		job1.setOutputValueClass(Tuple.class);
 		FileInputFormat.addInputPath(job1, new Path(inputDir));
 		Path job1OutputPath = new Path("job1_output");
 		FileOutputFormat.setOutputPath(job1, job1OutputPath);
 		job1.waitForCompletion(true);
+
+		// Retrieve total document count gtom job 1
 		long totalDocuments = job1.getCounters().findCounter("DocumentCounter", "TotalDocuments").getValue();
 		conf.setLong("TotalDocuments", totalDocuments);
 
@@ -47,9 +49,9 @@ public class ProfileA extends Configured implements Tool {
 		job2.setMapperClass(TFMapper.class);
 		job2.setReducerClass(TFReducer.class);
 		job2.setMapOutputKeyClass(Text.class);
-        job2.setMapOutputValueClass(Text.class);
+        job2.setMapOutputValueClass(Tuple.class);
         job2.setOutputKeyClass(Text.class);
-        job2.setOutputValueClass(Text.class);
+        job2.setOutputValueClass(Tuple.class);
 		FileInputFormat.addInputPath(job2, job1OutputPath);
 		Path job2OutputPath = new Path("job2_output");
 		FileOutputFormat.setOutputPath(job2, job2OutputPath);
@@ -62,9 +64,9 @@ public class ProfileA extends Configured implements Tool {
         job3.setMapperClass(TFIDFMapper.class);
         job3.setReducerClass(TFIDFReducer.class);
 		job3.setMapOutputKeyClass(Text.class);
-		job3.setMapOutputValueClass(Text.class);
+		job3.setMapOutputValueClass(Tuple.class);
 		job3.setOutputKeyClass(Text.class);
-		job3.setOutputValueClass(Text.class);
+		job3.setOutputValueClass(Tuple.class);
         FileInputFormat.addInputPath(job3, job2OutputPath);
         FileOutputFormat.setOutputPath(job3, new Path(outputDir));
 

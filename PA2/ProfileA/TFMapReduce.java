@@ -12,39 +12,36 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 
 public class TFMapReduce {
-    public static class TFMapper extends Mapper<Text, Text, Text, Text> {
-		public void map(Text docID, Text value, Context context) throws IOException, InterruptedException {
-            // output as <docID, (unigram frequency)>
+    public static class TFMapper extends Mapper<Text, Tuple, Text, Tuple> {
+		public void map(Text docID, Tuple value, Context context) throws IOException, InterruptedException {
+			// write output as <docID, (unigram frequency)>
 			context.write(docID, value);
 		}
 	}
 
-	public static class TFReducer extends Reducer<Text, Text, Text, Text> {
-		public void reduce(Text docID, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+	public static class TFReducer extends Reducer<Text, Tuple, Text, Tuple> {
+		public void reduce(Text docID, Iterable<Tuple> values, Context context) throws IOException, InterruptedException {
 			double maxFrequency = 0;
-			List<String> unigrams = new ArrayList<>();
+			List<Tuple> unigrams = new ArrayList<>();
 	
-			for (Text value : values) {
-				String[] parts = value.toString().replaceAll("[()]", "").split(", ");
+			for (Tuple value : values) {
+				String unigram = value.getFirst(); // unigram
+				double tfValue = value.getSecond(); // TFvalue
 
-				if (parts.length == 2) {
-					String unigram = parts[0]; // unigram
-					double tfValue = Double.parseDouble(parts[1]); // TFvalue
-	
-					// Update maxFrequency and store unigram info
-					maxFrequency = Math.max(maxFrequency, tfValue);					
-					unigrams.add(unigram + "," + tfValue);
-				}
+				// update maxFrequency and store unigram info
+				maxFrequency = Math.max(maxFrequency, tfValue);
+				unigrams.add(new Tuple(unigram, tfValue));
 			}
 	
-			for (String unigramInfo : unigrams) {
-				String[] parts = unigramInfo.split(",");
-				String unigram = parts[0];
-				double tfValue = Double.parseDouble(parts[1]);
+			for (Tuple unigramInfo : unigrams) {
+				String unigram = unigramInfo.getFirst();
+				double tfValue = unigramInfo.getSecond();
 	
-				// Calculate TF and write output as <docID, (unigram TFvalue)>
-				double tf = 0.5 + 0.5 * (tfValue / maxFrequency);	
-				context.write(docID, new Text("(" + unigram + ", " + tf + ")"));
+				// calculate TF
+				double tf = 0.5 + 0.5 * (tfValue / maxFrequency);
+
+				// write output as <docID, (unigram TFvalue)>
+				context.write(docID, new Tuple(unigram, tf));
 			}
 		}
 	}
