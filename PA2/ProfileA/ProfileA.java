@@ -23,6 +23,7 @@ import ProfileA.TFIDFMapReduce.TFIDFReducer;
 
 public class ProfileA extends Configured implements Tool {	
 	public static int runJob(Configuration conf, String inputDir, String outputDir) throws Exception {
+
 		// === Job 1: Unigram Frequency Calculation ===
 		Job job1 = Job.getInstance(conf, "Unigram Frequency Job");
 		job1.setJarByClass(UnigramFrequencyMapReduce.class);
@@ -72,14 +73,14 @@ public class ProfileA extends Configured implements Tool {
 
 	public static void main(String[] args) throws Exception {
 		int res = ToolRunner.run(new Configuration(), new ProfileA(), args);
-		System.exit(res); // res will be 0 if all tasks are executed succesfully and 1 otherwise
+		System.exit(res);
 	}
 
 	@Override
 	public int run(String[] args) throws Exception {
         Configuration conf = this.getConf();
         if (args.length != 2) {
-            System.err.println("Usage: TermFrequencyMapReduce <input path> <output path>");
+            System.err.println("Usage: ProfileA <input path> <output path>");
             System.exit(1);
         }
         return runJob(conf, args[0], args[1]);

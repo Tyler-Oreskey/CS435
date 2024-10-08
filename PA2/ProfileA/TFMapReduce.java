@@ -21,35 +21,28 @@ public class TFMapReduce {
 	public static class TFReducer extends Reducer<Text, Text, Text, Text> {
 		public void reduce(Text articleID, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 			double maxFrequency = 0;
-			List<String> unigrams = new ArrayList<>(); // To store unigram information
+			List<String> unigrams = new ArrayList<>();
 	
-			// First pass: find the maximum frequency and collect unigram data
 			for (Text value : values) {
-				String valueStr = value.toString();
-				// Remove parentheses and split by comma
-				String[] parts = valueStr.replaceAll("[()]", "").split(", ");
+				String[] parts = value.toString().replaceAll("[()]", "").split(", ");
+
 				if (parts.length == 2) {
 					String unigram = parts[0]; // unigram
 					double tfValue = Double.parseDouble(parts[1]); // TFvalue
 	
-					// Update maxFrequency
-					maxFrequency = Math.max(maxFrequency, tfValue);
-					
-					// Store unigram info for the next pass
+					// Update maxFrequency and store unigram info
+					maxFrequency = Math.max(maxFrequency, tfValue);					
 					unigrams.add(unigram + "," + tfValue);
 				}
 			}
 	
-			// Second pass: calculate TF for each unigram using the stored data
 			for (String unigramInfo : unigrams) {
 				String[] parts = unigramInfo.split(",");
 				String unigram = parts[0];
 				double tfValue = Double.parseDouble(parts[1]);
 	
-				// Calculate TF
-				double tf = 0.5 + 0.5 * (tfValue / maxFrequency);
-	
-				// Write output as <docID, (unigram TFvalue)>
+				// Calculate TF and write output as <articleID, (unigram TFvalue)>
+				double tf = 0.5 + 0.5 * (tfValue / maxFrequency);	
 				context.write(articleID, new Text("(" + unigram + ", " + tf + ")"));
 			}
 		}
