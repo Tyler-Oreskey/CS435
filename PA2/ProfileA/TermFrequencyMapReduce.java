@@ -64,7 +64,7 @@ public class TermFrequencyMapReduce extends Configured implements Tool {
 	}
 
 	public static class TermFrequencyReducer extends Reducer<Text, IntWritable, Text, Text> {
-		private IntWritable result = new IntWritable();
+		private long documentCount = 0;
 
 		public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
 			int sum = 0;
@@ -78,6 +78,13 @@ public class TermFrequencyMapReduce extends Configured implements Tool {
 			String unigram = keyParts[1];
 
 			context.write(new Text(articleID), new Text("(" + unigram + ", " + sum + ")")); 
+			documentCount++;
+		}
+
+		@Override
+		protected void cleanup(Context context) throws IOException, InterruptedException {
+			// Increment the counter for total documents processed
+			context.getCounter("DocumentCounter", "TotalDocuments").increment(documentCount);
 		}
 	}
 
@@ -123,6 +130,71 @@ public class TermFrequencyMapReduce extends Configured implements Tool {
 			}
 		}
 	}
+
+	public static class TFIDFMapper extends Mapper<Text, Text, Text, Text> {
+        public void map(Text docID, Text unigramFrequency, Context context) throws IOException, InterruptedException {
+			// Receives <docID, (unigram frequency) from InputFormatter
+			// Needs to output <unigram, (docID, TF value)>
+
+			// Unpack the unigram frequency input
+			String[] parts = unigramFrequency.toString().replace("(", "").replace(")", "").split(", ");
+			String unigram = parts[0]; // Extract unigram
+			double frequency = Double.parseDouble(parts[1]); // Extract frequency
+
+			// Create the output in the form <unigram, (docID, TF value)>
+			context.write(new Text(unigram), new Text("(" + docID.toString() + ", " + frequency + ")"));
+        }
+    }
+
+	public static class TFIDFReducer extends Reducer<Text, Text, Text, Text> {
+        private long totalDocuments; // N
+
+        @Override
+        protected void setup(Context context) throws IOException, InterruptedException {
+            // Fetch the total number of documents counter value from the previous map job
+            totalDocuments = context.getConfiguration().getLong("TotalDocuments", 0);
+        }
+
+        @Override
+        public void reduce(Text unigram, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+            Map<String, Double> unigramCounts = new HashMap<>(); // To count occurrences of each unigram
+            int documentCount = 0; // To track how many documents contain each unigram
+
+            // Iterate through all the input values and find ni (number of documents containing each unigram)
+            for (Text value : values) {
+                String valueStr = value.toString();
+                String[] parts = valueStr.replaceAll("[()]", "").split(", ");
+                if (parts.length == 2) {
+                    String docID = parts[0]; // Extract docID
+                    double tfValue = Double.parseDouble(parts[1]); // Parse as double
+
+                    // Count the occurrence of this unigram
+                    unigramCounts.put(docID, tfValue);
+                    documentCount++; // Increment document count for this unigram
+                }
+            }
+
+            // Calculate IDF and TF-IDF for each unigram
+            for (Map.Entry<String, Double> entry : unigramCounts.entrySet()) {
+                String docID = entry.getKey();
+                double tfValue = entry.getValue();
+
+                // Calculate IDF
+                double idfValue = 0; // Initialize IDF value
+
+                // Prevent division by zero
+                if (documentCount > 0) {
+                    idfValue = Math.log10((double) totalDocuments / documentCount); // IDF calculation
+                }
+
+                // Calculate TF-IDF
+                double tfidfValue = tfValue * idfValue;
+
+                // Output will be in the form: <docID, (unigram TF-IDF value)>
+                context.write(new Text(docID), new Text("(" + unigram.toString() + ", " + tfidfValue + ")"));
+            }
+        }
+    }
 	
 
 	
@@ -147,6 +219,10 @@ public class TermFrequencyMapReduce extends Configured implements Tool {
 		FileOutputFormat.setOutputPath(job1, job1OutputPath);
 		job1.waitForCompletion(true);
 
+		// Retrieve total document count from job1
+		long totalDocuments = job1.getCounters().findCounter("DocumentCounter", "TotalDocuments").getValue();
+		conf.setLong("TotalDocuments", totalDocuments);
+
 		// === Job 2: TF Calculation ===
 		Job job2 = Job.getInstance(conf, "Calculate TF Job");
 		job2.setInputFormatClass(FrequencyToKeyValueInputFormat.class);
@@ -165,9 +241,31 @@ public class TermFrequencyMapReduce extends Configured implements Tool {
 
 		// set file I/O path for job 2
 		FileInputFormat.addInputPath(job2, job1OutputPath);
-		FileOutputFormat.setOutputPath(job2, new Path(outputDir));
+		Path job2OutputPath = new Path("job2_output");
+		FileOutputFormat.setOutputPath(job2, job2OutputPath);
+		job2.waitForCompletion(true);
 
-		return job2.waitForCompletion(true) ? 0 : 1;
+		Job job3 = Job.getInstance(conf, "TF-IDF Calculation Job");
+		// Retrieve N from the first job
+		job3.setInputFormatClass(FrequencyToKeyValueInputFormat.class);
+
+        job3.setJarByClass(TermFrequencyMapReduce.class);
+        job3.setMapperClass(TFIDFMapper.class);
+        job3.setReducerClass(TFIDFReducer.class);
+
+		// set output types for mapper for job 3
+		job3.setMapOutputKeyClass(Text.class);
+		job3.setMapOutputValueClass(Text.class);
+
+		// set output types for reducer for job 3
+		job3.setOutputKeyClass(Text.class);
+		job3.setOutputValueClass(Text.class);
+
+        // set file I/O path for job 3
+        FileInputFormat.addInputPath(job3, job2OutputPath);
+        FileOutputFormat.setOutputPath(job3, new Path(outputDir));
+
+		return job3.waitForCompletion(true) ? 0 : 1;
 	}
 
 	public static void main(String[] args) throws Exception {
