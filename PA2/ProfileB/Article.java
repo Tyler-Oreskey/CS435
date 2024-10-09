@@ -25,19 +25,6 @@ public class Article {
     }
 
     public String[] getSentences() {
-        return this.bodyText.split(SENTENCE_DELIMITER);
-    }
-
-    // Add a parameter for numSentences
-    public String generateSummary(int numSentences) {
-        String[] sentences = getSentences();
-        StringBuilder summary = new StringBuilder();
-
-        // Check if numSentences is less than or equal to the length of sentences
-        for (int i = 0; i < Math.min(numSentences, sentences.length); i++) {
-            summary.append(sentences[i].trim()).append(". ");
-        }
-
-        return summary.toString().trim();
+        return getBody().split(SENTENCE_DELIMITER);
     }
 }
