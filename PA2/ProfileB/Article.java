@@ -3,7 +3,6 @@ package ProfileB;
 public class Article {
     private String docID;
     private String bodyText;
-    private static final String SENTENCE_DELIMITER = "\\.\\s";
 
     public Article(String rawText) {
         String[] parts = rawText.split("<====>");
@@ -25,6 +24,6 @@ public class Article {
     }
 
     public String[] getSentences() {
-        return getBody().split(SENTENCE_DELIMITER);
+        return getBody().split("\\.\\s");
     }
 }
