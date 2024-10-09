@@ -25,13 +25,13 @@ public class ProfileB extends Configured implements Tool {
 
         // Set output key and value classes for mapper and reducer
         job.setMapOutputKeyClass(Text.class);
-        job.setMapOutputValueClass(Text.class);
+        job.setMapOutputValueClass(Tuple.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
 
         // Set input and output paths
-        FileInputFormat.addInputPath(job, new Path(articleInputPath));  // Articles to be summarized
-        FileOutputFormat.setOutputPath(job, new Path(outputPath));      // Output path for the summaries
+        FileInputFormat.addInputPath(job, new Path(articleInputPath));
+        FileOutputFormat.setOutputPath(job, new Path(outputPath));
 
 		// Add TF-IDF file to the distributed cache
 		job.addCacheFile(new URI(tfidfPath));

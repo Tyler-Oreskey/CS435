@@ -14,7 +14,7 @@ import java.util.Map;
 
 import javax.naming.Context;
 
-public class ProfileBMapper extends Mapper<LongWritable, Text, Text, Text> {
+public class ProfileBMapper extends Mapper<LongWritable, Text, Text, Tuple> {
 
     // HashMap to store TF-IDF data from distributed cache
     private Map<String, Double> tfidfMap = new HashMap<>();
@@ -43,7 +43,6 @@ public class ProfileBMapper extends Mapper<LongWritable, Text, Text, Text> {
         }
     }
 
-
     @Override
     protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
         // Parse input text as an article
@@ -51,10 +50,14 @@ public class ProfileBMapper extends Mapper<LongWritable, Text, Text, Text> {
         Text docID = new Text(article.getDocID());
         String[] sentences = article.getSentences();
 
+        if (docID.toString().equals("Unknown")) {
+            return;
+        }
+
         // Process each sentence to calculate the sentence TF-IDF score
         for (String sentence : sentences) {
             double sentenceScore = calculateSentenceTFIDF(article.getDocID(), sentence);
-            context.write(docID, new Text(sentence + " (Score: " + sentenceScore + ")"));
+            context.write(docID, new Tuple(sentence, sentenceScore));
         }
     }
 
@@ -66,7 +69,7 @@ public class ProfileBMapper extends Mapper<LongWritable, Text, Text, Text> {
         for (String word : words) {
             String key = docID + "-" + word.toLowerCase();
             if (tfidfMap.containsKey(key)) {
-                score += tfidfMap.get(key);  // Add the TF-IDF value from the cache
+                score += tfidfMap.get(key);
                 wordCount++;
             }
         }

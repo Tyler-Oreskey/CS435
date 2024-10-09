@@ -10,28 +10,24 @@ import java.util.TreeMap;
 
 import javax.naming.Context;
 
-public class ProfileBReducer extends Reducer<Text, Text, Text, Text> {
+public class ProfileBReducer extends Reducer<Text, Tuple, Text, Text> {
 
     @Override
-    protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+    protected void reduce(Text key, Iterable<Tuple> values, Context context) throws IOException, InterruptedException {
         // TreeMap to keep the top 5 sentences with scores (sorted by score)
         TreeMap<Double, String> topSentences = new TreeMap<>(Collections.reverseOrder()); // Descending order by score
-        final int maxSentences = 5;
 
-        for (Text value : values) {
-            // Extract sentence and score using regex
-            String[] parts = value.toString().split(" \\(Score: ");
-            if (parts.length == 2) {
-                String sentence = parts[0].trim();
-                double score = Double.parseDouble(parts[1].replace(")", "").trim());
+        for (Tuple value : values) {
+            // Use the Tuple class to get sentence and score
+            String sentence = value.getFirst();
+            double score = value.getSecond();
 
-                // Add the sentence to the TreeMap
-                topSentences.put(score, sentence);
-                
-                // Maintain the top N sentences
-                if (topSentences.size() > maxSentences) {
-                    topSentences.pollLastEntry(); // Remove the lowest score
-                }
+            // Add the sentence to the TreeMap
+            topSentences.put(score, sentence);
+            
+            // Maintain the top N sentences
+            if (topSentences.size() > 5) {
+                topSentences.pollLastEntry(); // Remove the lowest score
             }
         }
 
