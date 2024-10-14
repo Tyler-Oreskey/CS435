@@ -38,13 +38,13 @@ public class ProfileA extends Configured implements Tool {
 		FileOutputFormat.setOutputPath(job1, job1OutputPath);
 		job1.waitForCompletion(true);
 
-		// Retrieve total document count gtom job 1
+		// Retrieve total document count from job 1
 		long totalDocuments = job1.getCounters().findCounter("DocumentCounter", "TotalDocuments").getValue();
 		conf.setLong("TotalDocuments", totalDocuments);
 
 		// === Job 2: TF Calculation ===
 		Job job2 = Job.getInstance(conf, "Calculate TF Job");
-		job2.setInputFormatClass(FrequencyToKeyValueInputFormat.class);
+		job2.setInputFormatClass(WholeFileInputFormat.class);
 		job2.setJarByClass(TFMapReduce.class);
 		job2.setMapperClass(TFMapper.class);
 		job2.setReducerClass(TFReducer.class);
@@ -59,7 +59,7 @@ public class ProfileA extends Configured implements Tool {
 
 		// === Job 3: TF Calculation ===
 		Job job3 = Job.getInstance(conf, "TF-IDF Calculation Job");
-		job3.setInputFormatClass(FrequencyToKeyValueInputFormat.class);
+		job3.setInputFormatClass(WholeFileInputFormat.class);
         job3.setJarByClass(TFIDFMapReduce.class);
         job3.setMapperClass(TFIDFMapper.class);
         job3.setReducerClass(TFIDFReducer.class);

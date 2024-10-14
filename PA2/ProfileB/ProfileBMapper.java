@@ -34,7 +34,7 @@ public class ProfileBMapper extends Mapper<LongWritable, Text, Text, Tuple> {
                     if (tupleParts.length == 2) {
                         String unigram = tupleParts[0].trim();
                         double tfidf = Double.parseDouble(tupleParts[1].trim());
-                        String key = docID + "-" + unigram;
+                        String key = docID + ":" + unigram;
                         tfidfMap.put(key, tfidf);
                     }
                 }
@@ -67,7 +67,7 @@ public class ProfileBMapper extends Mapper<LongWritable, Text, Text, Tuple> {
         int wordCount = 0;
 
         for (String word : words) {
-            String key = docID + "-" + word.toLowerCase();
+            String key = docID + ":" + word.toLowerCase();
             if (tfidfMap.containsKey(key)) {
                 score += tfidfMap.get(key);
                 wordCount++;
