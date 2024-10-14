@@ -9,7 +9,7 @@ import org.apache.hadoop.mapreduce.lib.input.LineRecordReader;
 
 import java.io.IOException;
 
-public class FrequencyToKeyValueRecordReader extends RecordReader<Text, Tuple> {
+public class WholeFileRecordReader extends RecordReader<Text, Tuple> {
     private LineRecordReader lineReader = new LineRecordReader();
     private Text key = new Text();
     private Tuple value;
