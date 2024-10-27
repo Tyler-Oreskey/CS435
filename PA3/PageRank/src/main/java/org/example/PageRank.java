@@ -12,7 +12,13 @@ import org.apache.spark.api.java.JavaSparkContext;
 public final class PageRank {
     public static void main(String[] args) throws Exception {
         if (args.length < 4) {
-            System.err.println("Usage: JavaPageRank <links_file> <titles_file> <ideal_output> <taxation_output>");
+            System.err.println("Usage: JavaPageRank <links_file> <titles_file> <type> <output_dir>");
+            System.exit(1);
+        }
+
+        String type = args[2].toLowerCase();
+        if (!type.equals("ideal") && !type.equals("taxation")) {
+            System.err.println("Error: Type must be either 'ideal' or 'taxation'");
             System.exit(1);
         }
 
@@ -35,13 +41,13 @@ public final class PageRank {
             return new Tuple2<>(parts[0], parts[1]);
         }).distinct().groupByKey().cache();
 
-        // Execute Ideal PageRank
-        IdealPageRank idealPageRank = new IdealPageRank();
-        idealPageRank.calculate(links, titlesMap, args[2], sc);
-
-        // Execute Taxation PageRank
-        TaxationPageRank taxationPageRank = new TaxationPageRank();
-        taxationPageRank.calculate(links, titlesMap, args[3], sc);
+        if (type.equals("ideal")) {
+            IdealPageRank idealPageRank = new IdealPageRank();
+            idealPageRank.calculate(links, titlesMap, args[3], sc);
+        } else {
+            TaxationPageRank taxationPageRank = new TaxationPageRank();
+            taxationPageRank.calculate(links, titlesMap, args[3], sc);
+        }
 
         spark.stop();
         sc.stop();
