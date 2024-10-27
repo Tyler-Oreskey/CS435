@@ -11,19 +11,23 @@ import com.google.common.collect.Iterables;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.api.java.JavaSparkContext;
 
 public final class PageRank {
     public static void main(String[] args) throws Exception {
         if (args.length < 2) {
-            System.err.println("Usage: JavaPageRank <links_file> <titles_file>");
+            System.err.println("Usage: JavaPageRank <links_file> <titles_file> <ideal_output> <taxation_output>");
             System.exit(1);
         }
 
         SparkSession spark = SparkSession
                 .builder()
                 .appName("PageRank")
-                .master("local[5]")
+                .master("yarn")
                 .getOrCreate();
+
+        // Get the JavaSparkContext from SparkSession
+        JavaSparkContext sc = new JavaSparkContext(spark.sparkContext());
 
         JavaRDD<String> lines = spark.read().textFile(args[0]).javaRDD(); // read links
         JavaRDD<String> titles = spark.read().textFile(args[1]).javaRDD(); // read titles
@@ -66,13 +70,17 @@ public final class PageRank {
         // Collect and sort by rank (Ideal PageRank)
         List<Tuple2<String, Double>> idealPageRank = new ArrayList<>(ranks.collect());
         idealPageRank.sort((a, b) -> Double.compare(b._2(), a._2())); // Descending order
-        // Display the top results with titles (Ideal PageRank)
-        System.out.println("Ideal PageRank Results:");
+
+        List<String> idealOutput = new ArrayList<>();
+        // Prepare output for Ideal PageRank
         for (Tuple2<String, Double> rank : idealPageRank) {
             int pageId = Integer.parseInt(rank._1());
-            System.out.println(titlesMap.get(pageId) + " has rank: " + rank._2());
+            idealOutput.add(titlesMap.get(pageId) + " has rank: " + rank._2());
         }
 
+        // Save Ideal PageRank results to output file in HDFS
+        JavaRDD<String> idealOutputRDD = sc.parallelize(idealOutput);
+        idealOutputRDD.saveAsTextFile(args[2]); // Ideal PageRank output path in HDFS
 
         // Reset ranks for Taxation
         ranks = links.mapValues(rs -> 1.0);
@@ -99,12 +107,16 @@ public final class PageRank {
         taxationPageRank.sort((a, b) -> Double.compare(b._2(), a._2())); // Descending order
 
         // Display the top results with titles (Taxation PageRank)
-        System.out.println("PageRank with Taxation Results:");
+        List<String> taxationOutput = new ArrayList<>();
         for (Tuple2<String, Double> rank : taxationPageRank) {
             int pageId = Integer.parseInt(rank._1());
-            System.out.println(titlesMap.get(pageId) + " has rank: " + rank._2());
+            taxationOutput.add(titlesMap.get(pageId) + " has rank: " + rank._2());
         }
 
+        JavaRDD<String> taxationOutputRDD = sc.parallelize(taxationOutput);
+        taxationOutputRDD.saveAsTextFile(args[3]); // Taxation PageRank output path in HDFS
+
         spark.stop();
+        sc.stop();
     }
 }
