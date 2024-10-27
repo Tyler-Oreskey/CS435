@@ -26,14 +26,13 @@ public class IdealPageRank {
                         return results.iterator();
                     });
 
-            // Recalculate ranks by applying damping factor
-            ranks = contribs.reduceByKey((a, b) -> a + b)
-                    .mapValues(sum -> 0.15 + sum * 0.85);
+            // Calculate ranks by applying damping factor
+            ranks = contribs.reduceByKey((a, b) -> a + b).mapValues(sum -> 0.15 + sum * 0.85);
         }
 
-        // Collect and sort by rank
+        // Collect and sort by rank descending order
         List<Tuple2<String, Double>> idealPageRank = new ArrayList<>(ranks.collect());
-        idealPageRank.sort((a, b) -> Double.compare(b._2(), a._2())); // Descending order
+        idealPageRank.sort((a, b) -> Double.compare(b._2(), a._2()));
 
         // Prepare output
         List<String> idealOutput = new ArrayList<>();

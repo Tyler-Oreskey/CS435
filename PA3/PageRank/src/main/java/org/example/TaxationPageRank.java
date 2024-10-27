@@ -16,7 +16,6 @@ public class TaxationPageRank {
 
         long totalPages = links.count();
 
-        // Run the Taxation PageRank algorithm for 25 iterations
         for (int current = 0; current < 25; current++) {
             JavaPairRDD<String, Double> contribs = links.join(ranks).values()
                     .flatMapToPair(s -> {
@@ -29,13 +28,12 @@ public class TaxationPageRank {
                     });
 
             // Calculate ranks by applying taxation
-            ranks = contribs.reduceByKey((a, b) -> a + b)
-                    .mapValues(sum -> (1 - 0.85) / totalPages + 0.85 * sum);
+            ranks = contribs.reduceByKey((a, b) -> a + b).mapValues(sum -> (1 - 0.85) / totalPages + 0.85 * sum);
         }
 
-        // Collect and sort by rank
+        // Collect and sort by rank descending order
         List<Tuple2<String, Double>> taxationPageRank = new ArrayList<>(ranks.collect());
-        taxationPageRank.sort((a, b) -> Double.compare(b._2(), a._2())); // Descending order
+        taxationPageRank.sort((a, b) -> Double.compare(b._2(), a._2()));
 
         // Prepare output
         List<String> taxationOutput = new ArrayList<>();

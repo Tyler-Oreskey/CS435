@@ -11,7 +11,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 
 public final class PageRank {
     public static void main(String[] args) throws Exception {
-        if (args.length < 2) {
+        if (args.length < 4) {
             System.err.println("Usage: JavaPageRank <links_file> <titles_file> <ideal_output> <taxation_output>");
             System.exit(1);
         }
