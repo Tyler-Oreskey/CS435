@@ -14,7 +14,6 @@ public class IdealPageRank {
     public void calculate(JavaPairRDD<String, Iterable<String>> links, Map<Integer, String> titlesMap, String outputPath, JavaSparkContext sc) {
         JavaPairRDD<String, Double> ranks = links.mapValues(rs -> 1.0);
 
-        // Run the Idealized PageRank algorithm for 25 iterations
         for (int current = 0; current < 25; current++) {
             JavaPairRDD<String, Double> contribs = links.join(ranks).values()
                     .flatMapToPair(s -> {
