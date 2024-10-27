@@ -15,11 +15,9 @@ public class TaxationPageRank {
         JavaPairRDD<String, Double> ranks = links.mapValues(rs -> 1.0);
 
         long totalPages = links.count();
-        double beta = 0.85;
-        int iterations = 25;
 
         // Run the Taxation PageRank algorithm for 25 iterations
-        for (int current = 0; current < iterations; current++) {
+        for (int current = 0; current < 25; current++) {
             JavaPairRDD<String, Double> contribs = links.join(ranks).values()
                     .flatMapToPair(s -> {
                         int urlCount = Iterables.size(s._1());
@@ -31,21 +29,22 @@ public class TaxationPageRank {
                     });
 
             // Calculate ranks by applying taxation
-            ranks = contribs.reduceByKey((a, b) -> a + b).mapValues(sum -> (1 - beta) / totalPages + beta * sum);
+            ranks = contribs.reduceByKey((a, b) -> a + b)
+                    .mapValues(sum -> (1 - 0.85) / totalPages + 0.85 * sum);
         }
 
-        // Collect and sort by rank (PageRank with Taxation)
+        // Collect and sort by rank
         List<Tuple2<String, Double>> taxationPageRank = new ArrayList<>(ranks.collect());
         taxationPageRank.sort((a, b) -> Double.compare(b._2(), a._2())); // Descending order
 
-        // Display the top results with titles (Taxation PageRank)
+        // Prepare output
         List<String> taxationOutput = new ArrayList<>();
         for (Tuple2<String, Double> rank : taxationPageRank) {
             int pageId = Integer.parseInt(rank._1());
             taxationOutput.add(titlesMap.get(pageId) + " has rank: " + rank._2());
         }
 
-        // Save Taxation PageRank results to output file in HDFS
+        // Save output
         JavaRDD<String> taxationOutputRDD = sc.parallelize(taxationOutput);
         taxationOutputRDD.saveAsTextFile(outputPath);
     }
