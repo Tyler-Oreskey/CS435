@@ -28,7 +28,7 @@ public class TaxationPageRank {
                     });
 
             // Calculate ranks by applying taxation
-            ranks = contribs.reduceByKey((a, b) -> a + b).mapValues(sum -> (1 - 0.85) / totalPages + 0.85 * sum);
+            ranks = contribs.reduceByKey(Double::sum).mapValues(sum -> (1 - 0.85) / totalPages + 0.85 * sum);
         }
 
         // Collect and sort by rank descending order

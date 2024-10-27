@@ -27,7 +27,7 @@ public class IdealPageRank {
                     });
 
             // Calculate ranks by applying damping factor
-            ranks = contribs.reduceByKey((a, b) -> a + b).mapValues(sum -> 0.15 + sum * 0.85);
+            ranks = contribs.reduceByKey(Double::sum).mapValues(sum -> 0.15 + sum * 0.85);
         }
 
         // Collect and sort by rank descending order
