@@ -16,23 +16,20 @@ public final class PageRank {
             System.exit(1);
         }
 
-        SparkSession spark = SparkSession
-                .builder()
-                .appName("PageRank")
-                .master("yarn")
-                .getOrCreate();
-
-        // Get the JavaSparkContext from SparkSession
+        SparkSession spark = SparkSession.builder().appName("PageRank").master("yarn").getOrCreate();
         JavaSparkContext sc = new JavaSparkContext(spark.sparkContext());
 
-        JavaRDD<String> lines = spark.read().textFile(args[0]).javaRDD(); // read links
-        JavaRDD<String> titles = spark.read().textFile(args[1]).javaRDD(); // read titles
+        // Read links and titles
+        JavaRDD<String> lines = spark.read().textFile(args[0]).javaRDD();
+        JavaRDD<String> titles = spark.read().textFile(args[1]).javaRDD();
 
         // create a map of page IDs to titles
         Map<Integer, String> titlesMap = titles.zipWithIndex()
                 .mapToPair(t -> new Tuple2<>((int) (t._2() + 1), t._1()))
                 .collectAsMap();
 
+        // Convert each line into a key-value pair: source page as key
+        // and comma-separated target pages as value for grouping.
         JavaPairRDD<String, Iterable<String>> links = lines.mapToPair(s -> {
             String[] parts = s.split(": ");
             return new Tuple2<>(parts[0], parts[1]);
